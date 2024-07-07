@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_clinic_app/core/core.dart';
 
 import '../../../core/components/components.dart';
 import '../../home/pages/dashboard_page.dart';
+import '../bloc/login/login_bloc.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -48,11 +50,67 @@ class LoginPage extends StatelessWidget {
                         label: 'Kata Sandi',
                       ),
                       const SpaceHeight(40.0),
-                      Button.filled(
-                        onPressed: () {
-                          context.pushReplacement(const DashboardPage());
+                      BlocConsumer<LoginBloc, LoginState>(
+                        listener: (context, state) {
+                          state.maybeWhen(
+                              success: (data) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const DashboardPage(),
+                                  ),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Login Berhasil'),
+                                    backgroundColor: AppColors.green,
+                                  ),
+                                );
+                              },
+                              error: (message) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(message),
+                                    backgroundColor: AppColors.red,
+                                  ),
+                                );
+                              },
+                              orElse: () {});
                         },
-                        label: 'MASUK',
+                        builder: (context, state) {
+                          state.maybeWhen(
+                            orElse: () {
+                              return Button.filled(
+                                onPressed: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const DashboardPage(),
+                                    ),
+                                  );
+                                },
+                                label: 'MASUK',
+                              );
+                            },
+                            loading: () {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            },
+                          );
+                          return Button.filled(
+                            onPressed: () {
+                              context.read<LoginBloc>().add(
+                                    LoginEvent.login(
+                                      email: emailController.text,
+                                      password: passwordController.text,
+                                    ),
+                                  );
+                            },
+                            label: 'MASUK',
+                          );
+                        },
                       ),
                       const SpaceHeight(20.0),
                       const SpaceHeight(100.0),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../auth/bloc/logout/logout_bloc.dart';
+import '../../auth/pages/login_page.dart';
 import '../widgets/nav_item.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -62,10 +65,43 @@ class _DashboardPageState extends State<DashboardPage> {
                           isActive: _selectedIndex == 4,
                           onTap: () => _onItemTapped(4),
                         ),
-                        NavItem(
-                          iconPath: Assets.icons.logOut.path,
-                          isActive: false,
-                          onTap: () {},
+                        BlocListener<LogoutBloc, LogoutState>(
+                          listener: (context, state) {
+                            state.maybeWhen(
+                              success: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => LoginPage(),
+                                  ),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Logout berhasil'),
+                                    backgroundColor: AppColors.green,
+                                  ),
+                                );
+                              },
+                              error: (message) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(message),
+                                    backgroundColor: AppColors.red,
+                                  ),
+                                );
+                              },
+                              orElse: () {},
+                            );
+                          },
+                          child: NavItem(
+                            iconPath: Assets.icons.logOut.path,
+                            isActive: false,
+                            onTap: () {
+                              context
+                                  .read<LogoutBloc>()
+                                  .add(const LogoutEvent.logout());
+                            },
+                          ),
                         ),
                       ],
                     ),
